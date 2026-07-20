@@ -70,7 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const normalizedName = activityName
       .trim()
       .slice(0, MAX_ACTIVITY_NAME_LENGTH);
-    return /^[\w\s'&,-]+$/u.test(normalizedName) ? normalizedName : "";
+    return /^[\p{L}\p{N}\s,-]+$/u.test(normalizedName) ? normalizedName : "";
+  }
+
+  function sanitizeShareContent(text) {
+    return String(text || "")
+      .replace(/[<>]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function buildActivityShareUrl(activityName) {
@@ -80,9 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildActivityShareText(activityName, details) {
-    return `Check out ${activityName} at Mergington High School. ${details.description} Schedule: ${formatSchedule(
-      details
-    )}`;
+    const safeActivityName = sanitizeShareContent(activityName);
+    const safeDescription = sanitizeShareContent(details.description);
+    const safeSchedule = sanitizeShareContent(formatSchedule(details));
+
+    return `Check out ${safeActivityName} at Mergington High School. ${safeDescription} Schedule: ${safeSchedule}`;
   }
 
   async function copyTextToClipboard(text) {
@@ -193,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.classList.toggle("shared-activity", isRequestedActivity);
 
       if (isRequestedActivity) {
-        card.tabIndex = 0;
+        card.setAttribute("tabindex", "0");
         card.setAttribute(
           "aria-label",
           `${card.dataset.activityName} activity card opened from a shared link`
