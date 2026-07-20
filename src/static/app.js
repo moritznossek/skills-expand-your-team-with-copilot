@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Authentication state
   let currentUser = null;
   let requestedActivityName = "";
-  let hasFocusedRequestedActivity = false;
+  let hasScrolledToRequestedActivity = false;
 
   // Time range mappings for the dropdown
   const timeRanges = {
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "activity"
     );
     requestedActivityName = activityName ? activityName.trim() : "";
-    hasFocusedRequestedActivity = false;
+    hasScrolledToRequestedActivity = false;
   }
 
   function buildActivityShareUrl(activityName) {
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function focusRequestedActivity() {
-    if (!requestedActivityName || hasFocusedRequestedActivity) {
+    if (!requestedActivityName || hasScrolledToRequestedActivity) {
       return;
     }
 
@@ -165,9 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     targetCard.classList.add("shared-activity");
-    targetCard.focus({ preventScroll: true });
     targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-    hasFocusedRequestedActivity = true;
+    targetCard.focus();
+    hasScrolledToRequestedActivity = true;
   }
 
   // Initialize filters from active elements
@@ -598,10 +598,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
-    activityCard.tabIndex = -1;
 
     if (name === requestedActivityName) {
       activityCard.classList.add("shared-activity");
+      activityCard.tabIndex = 0;
     }
 
     // Calculate spots and capacity
