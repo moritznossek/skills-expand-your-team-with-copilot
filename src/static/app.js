@@ -43,6 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Authentication state
   let currentUser = null;
+  let requestedActivityName = "";
+  let hasFocusedRequestedActivity = false;
 
   // Time range mappings for the dropdown
   const timeRanges = {
@@ -50,6 +52,123 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+
+  function updateRequestedActivityFromUrl() {
+    const activityName = new URLSearchParams(window.location.search).get(
+      "activity"
+    );
+    requestedActivityName = activityName ? activityName.trim() : "";
+    hasFocusedRequestedActivity = false;
+  }
+
+  function buildActivityShareUrl(activityName) {
+    const shareUrl = new URL(window.location.pathname, window.location.origin);
+    shareUrl.searchParams.set("activity", activityName);
+    return shareUrl.toString();
+  }
+
+  function buildActivityShareText(activityName, details) {
+    return `Check out ${activityName} at Mergington High School. ${details.description} Schedule: ${formatSchedule(
+      details
+    )}`;
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const helperTextArea = document.createElement("textarea");
+    helperTextArea.value = text;
+    helperTextArea.setAttribute("readonly", "");
+    helperTextArea.style.position = "absolute";
+    helperTextArea.style.left = "-9999px";
+    document.body.appendChild(helperTextArea);
+    helperTextArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(helperTextArea);
+  }
+
+  function createShareButton(label, modifierClass, onClick) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `share-button ${modifierClass}`;
+    button.textContent = label;
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
+  function createShareActions(activityName, details) {
+    const shareUrl = buildActivityShareUrl(activityName);
+    const shareText = buildActivityShareText(activityName, details);
+    const shareActions = document.createElement("div");
+    shareActions.className = "activity-share-actions";
+
+    const shareButton = createShareButton("Share", "share-button-primary", async () => {
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: activityName,
+            text: shareText,
+            url: shareUrl,
+          });
+          showMessage(`Shared ${activityName}.`, "success");
+        } else {
+          await copyTextToClipboard(`${shareText} ${shareUrl}`);
+          showMessage("Share details copied to your clipboard.", "success");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          showMessage("Unable to share this activity right now.", "error");
+          console.error("Error sharing activity:", error);
+        }
+      }
+    });
+
+    const copyLinkButton = createShareButton(
+      "Copy Link",
+      "share-button-secondary",
+      async () => {
+        try {
+          await copyTextToClipboard(shareUrl);
+          showMessage("Share link copied to your clipboard.", "success");
+        } catch (error) {
+          showMessage("Unable to copy the share link right now.", "error");
+          console.error("Error copying share link:", error);
+        }
+      }
+    );
+
+    const emailLink = document.createElement("a");
+    emailLink.className = "share-button share-link";
+    emailLink.href = `mailto:?subject=${encodeURIComponent(
+      `Join me at ${activityName}`
+    )}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;
+    emailLink.textContent = "Email";
+
+    shareActions.append(shareButton, copyLinkButton, emailLink);
+    return shareActions;
+  }
+
+  function focusRequestedActivity() {
+    if (!requestedActivityName || hasFocusedRequestedActivity) {
+      return;
+    }
+
+    const targetCard = Array.from(
+      activitiesList.querySelectorAll(".activity-card")
+    ).find((card) => card.dataset.activityName === requestedActivityName);
+
+    if (!targetCard) {
+      return;
+    }
+
+    targetCard.classList.add("shared-activity");
+    targetCard.focus({ preventScroll: true });
+    targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    hasFocusedRequestedActivity = true;
+  }
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -470,12 +589,20 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    focusRequestedActivity();
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
+    activityCard.tabIndex = -1;
+
+    if (name === requestedActivityName) {
+      activityCard.classList.add("shared-activity");
+    }
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -568,6 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <div class="activity-share-actions"></div>
       </div>
     `;
 
@@ -586,6 +714,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const shareActionsContainer = activityCard.querySelector(
+      ".activity-share-actions"
+    );
+    shareActionsContainer.replaceWith(createShareActions(name, details));
 
     activitiesList.appendChild(activityCard);
   }
@@ -862,6 +995,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  updateRequestedActivityFromUrl();
+  window.addEventListener("popstate", () => {
+    updateRequestedActivityFromUrl();
+    displayFilteredActivities();
+  });
   checkAuthentication();
   initializeFilters();
   fetchActivities();

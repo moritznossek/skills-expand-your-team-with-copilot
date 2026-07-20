@@ -187,7 +187,8 @@ section h3 {
   margin-top: auto;
   padding-top: 10px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Activity Tag */
@@ -285,6 +286,57 @@ section h3 {
   letter-spacing: 0.3px;
   text-transform: uppercase;
   border: none;
+}
+
+.activity-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.share-button,
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.share-button:hover,
+.share-link:hover {
+  background-color: var(--border-light);
+}
+
+.share-button-primary {
+  background-color: var(--primary);
+  color: var(--primary-text);
+  border-color: var(--primary-dark);
+}
+
+.share-button-primary:hover {
+  background-color: var(--primary-light);
+}
+
+.share-button-secondary {
+  background-color: var(--surface);
+}
+
+.shared-activity {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.2);
+}
+
+.shared-activity:focus {
+  outline: none;
 }
 
 button {
