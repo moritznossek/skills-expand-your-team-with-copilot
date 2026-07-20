@@ -57,8 +57,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityName = new URLSearchParams(window.location.search).get(
       "activity"
     );
-    requestedActivityName = activityName ? activityName.trim() : "";
+    requestedActivityName = sanitizeActivityName(activityName);
     hasScrolledToRequestedActivity = false;
+  }
+
+  function sanitizeActivityName(activityName) {
+    if (!activityName) {
+      return "";
+    }
+
+    const normalizedName = activityName.trim().slice(0, 80);
+    return /^[\w\s'&,-]+$/u.test(normalizedName) ? normalizedName : "";
   }
 
   function buildActivityShareUrl(activityName) {
@@ -598,10 +607,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
+    activityCard.setAttribute("role", "article");
 
     if (name === requestedActivityName) {
       activityCard.classList.add("shared-activity");
       activityCard.tabIndex = 0;
+      activityCard.setAttribute(
+        "aria-label",
+        `${name} activity card opened from a shared link`
+      );
     }
 
     // Calculate spots and capacity

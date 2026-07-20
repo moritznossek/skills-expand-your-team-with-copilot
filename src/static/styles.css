@@ -10,6 +10,7 @@
   --secondary: #ff6f00;
   --secondary-light: #ffa040;
   --secondary-dark: #c43e00;
+  --secondary-rgb: 255, 111, 0;
   --secondary-text: #ffffff;
 
   /* Neutral colors */
@@ -332,7 +333,7 @@ section h3 {
 
 .shared-activity {
   border-color: var(--secondary);
-  box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--secondary-rgb), 0.2);
 }
 
 .shared-activity:focus {
