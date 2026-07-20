@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
 
-  function updateRequestedActivityFromUrl() {
+  function extractRequestedActivityFromUrl() {
     const activityName = new URLSearchParams(window.location.search).get(
       "activity"
     );
@@ -79,15 +79,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const helperTextArea = document.createElement("textarea");
-    helperTextArea.value = text;
-    helperTextArea.setAttribute("readonly", "");
-    helperTextArea.style.position = "absolute";
-    helperTextArea.style.left = "-9999px";
-    document.body.appendChild(helperTextArea);
-    helperTextArea.select();
+    const fallbackTextArea = document.createElement("textarea");
+    fallbackTextArea.value = text;
+    fallbackTextArea.setAttribute("readonly", "");
+    fallbackTextArea.style.position = "absolute";
+    fallbackTextArea.style.left = "-9999px";
+    document.body.appendChild(fallbackTextArea);
+    fallbackTextArea.select();
     document.execCommand("copy");
-    document.body.removeChild(helperTextArea);
+    document.body.removeChild(fallbackTextArea);
   }
 
   function createShareButton(label, modifierClass, onClick) {
@@ -695,7 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
-        <div class="activity-share-actions"></div>
       </div>
     `;
 
@@ -715,10 +714,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    const shareActionsContainer = activityCard.querySelector(
-      ".activity-share-actions"
+    const actionsContainer = activityCard.querySelector(
+      ".activity-card-actions"
     );
-    shareActionsContainer.replaceWith(createShareActions(name, details));
+    actionsContainer.appendChild(createShareActions(name, details));
 
     activitiesList.appendChild(activityCard);
   }
@@ -995,9 +994,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
-  updateRequestedActivityFromUrl();
+  extractRequestedActivityFromUrl();
   window.addEventListener("popstate", () => {
-    updateRequestedActivityFromUrl();
+    extractRequestedActivityFromUrl();
     displayFilteredActivities();
   });
   checkAuthentication();
