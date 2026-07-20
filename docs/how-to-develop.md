@@ -1,5 +1,6 @@
 # Development Guide
 
+
 ## Initial Setup
 
 This project is best developed using GitHub Codespaces, which provides a consistent development environment with all the necessary tools pre-configured.
