@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const MAX_ACTIVITY_NAME_LENGTH = 80;
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -66,7 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return "";
     }
 
-    const normalizedName = activityName.trim().slice(0, 80);
+    const normalizedName = activityName
+      .trim()
+      .slice(0, MAX_ACTIVITY_NAME_LENGTH);
     return /^[\w\s'&,-]+$/u.test(normalizedName) ? normalizedName : "";
   }
 
@@ -177,6 +180,29 @@ document.addEventListener("DOMContentLoaded", () => {
     targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
     targetCard.focus();
     hasScrolledToRequestedActivity = true;
+  }
+
+  function updateSharedActivityHighlight() {
+    const activityCards = activitiesList.querySelectorAll(".activity-card");
+
+    activityCards.forEach((card) => {
+      const isRequestedActivity =
+        requestedActivityName &&
+        card.dataset.activityName === requestedActivityName;
+
+      card.classList.toggle("shared-activity", isRequestedActivity);
+
+      if (isRequestedActivity) {
+        card.tabIndex = 0;
+        card.setAttribute(
+          "aria-label",
+          `${card.dataset.activityName} activity card opened from a shared link`
+        );
+      } else {
+        card.removeAttribute("tabindex");
+        card.removeAttribute("aria-label");
+      }
+    });
   }
 
   // Initialize filters from active elements
@@ -599,6 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderActivityCard(name, details);
     });
 
+    updateSharedActivityHighlight();
     focusRequestedActivity();
   }
 
@@ -608,15 +635,6 @@ document.addEventListener("DOMContentLoaded", () => {
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
     activityCard.setAttribute("role", "article");
-
-    if (name === requestedActivityName) {
-      activityCard.classList.add("shared-activity");
-      activityCard.tabIndex = 0;
-      activityCard.setAttribute(
-        "aria-label",
-        `${name} activity card opened from a shared link`
-      );
-    }
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -1011,7 +1029,8 @@ document.addEventListener("DOMContentLoaded", () => {
   extractRequestedActivityFromUrl();
   window.addEventListener("popstate", () => {
     extractRequestedActivityFromUrl();
-    displayFilteredActivities();
+    updateSharedActivityHighlight();
+    focusRequestedActivity();
   });
   checkAuthentication();
   initializeFilters();
